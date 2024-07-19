@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "flask>=3.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flask_namespace"
+version = "0.1.1"
+description = "This package makes bundling flask routes into a namespace using a class very easy.  It uses Blueprints under the hood, and each endpoint is a method on the class"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+authors = [
+    { name="Tyler Petrov", email="tylerpetrov16@gmail.com" },
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Tyler-Petrov/flask_namespace"
+"Issues" = "https://github.com/Tyler-Petrov/flask_namespace/issues"
