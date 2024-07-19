@@ -1,7 +1,12 @@
 import inspect
+import re
 from typing import Callable
 
 from flask import Blueprint, g, render_template, Flask
+
+
+def split_on_uppercase_char(string):
+    return re.findall("[A-Z][^A-Z]*", str(string))
 
 
 def cap_to_snake_case(string):
