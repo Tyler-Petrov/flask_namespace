@@ -1,11 +1,11 @@
 import inspect
-import re
 from typing import Callable
 
 from flask import Blueprint, Flask, g, render_template
 from itsdangerous import URLSafeTimedSerializer
 
 from flask_namespace.exceptions import OutsideLocality
+from flask_namespace.helpers import cap_to_snake_case
 
 
 class Signer(URLSafeTimedSerializer):

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flask_namespace"
-version = "0.1.2"
+version = "0.1.3"
 description = "This package makes bundling flask routes into a namespace using a class very easy.  It uses Blueprints under the hood, and each endpoint is a method on the class"
 readme = "README.md"
 requires-python = ">=3.6"
