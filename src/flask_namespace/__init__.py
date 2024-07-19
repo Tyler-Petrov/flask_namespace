@@ -16,7 +16,7 @@ class Signer(URLSafeTimedSerializer):
         for frame_info in inspect.stack():
             frame = frame_info.frame
 
-            # Get the 'self' from the frame locals
+            # Get the 'self' or 'cls' from the frame locals
             instance = frame.f_locals.get("self") or frame.f_locals.get("cls")
 
             if not (instance and isinstance(instance, Namespace)):
