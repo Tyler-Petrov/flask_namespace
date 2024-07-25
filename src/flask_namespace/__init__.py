@@ -4,7 +4,7 @@ from typing import Callable
 from flask import Blueprint, Flask, g, render_template
 from itsdangerous import URLSafeTimedSerializer
 
-from flask_namespace.exceptions import OutsideLocality
+from flask_namespace.exceptions import OutsideScope
 from flask_namespace.helpers import cap_to_snake_case
 
 
@@ -25,15 +25,15 @@ class Signer(URLSafeTimedSerializer):
             return instance
 
     @classmethod
-    def locality(cls, local: bool | type | str = True) -> str | None:
-        if local is False:
+    def get_scope(cls, scope: bool | type | str = True) -> str | None:
+        if scope is False:
             return None
 
-        if isinstance(local, type):
-            return local.__name__
+        if isinstance(scope, type):
+            return scope.__name__
 
-        if isinstance(local, str):
-            return local
+        if isinstance(scope, str):
+            return scope
 
         if namespace_cls := cls.find_closest_route_namespace():
             return namespace_cls.__name__
@@ -44,11 +44,11 @@ class Signer(URLSafeTimedSerializer):
         self,
         obj,
         salt: str | bytes | None = None,
-        local: bool | type | str = True,
+        scope: bool | type | str = True,
     ) -> str | bytes:
 
         # Wrap data in dictionary so configuration can be stored
-        data = {"data": obj, "locality": self.locality(local)}
+        data = {"data": obj, "scope_str": self.get_scope(scope)}
 
         return super().dumps(data, salt)
 
@@ -58,7 +58,7 @@ class Signer(URLSafeTimedSerializer):
         max_age: int | None = None,
         return_timestamp: bool = False,
         salt: str | bytes | None = None,
-        local: bool | type | str = True,
+        scope: bool | type | str = True,
     ):
         parsed_data = super().loads(
             s,
@@ -67,11 +67,11 @@ class Signer(URLSafeTimedSerializer):
             salt=salt,
         )
 
-        if (locality := parsed_data.get("locality")) and locality != (
-            current_locality := self.locality(local)
-        ):
-            raise OutsideLocality(
-                f"Itsdangerous data attempted to be parsed outside of set locality. Previous locality: {locality}, Current locality: {current_locality}"
+        if previous_scope_str := parsed_data.get(
+            "scope_str"
+        ) and previous_scope_str != (current_scope := self.get_scope(scope)):
+            raise OutsideScope(
+                f"Itsdangerous data attempted to be parsed outside of set scope_str. Previous scope_str: {previous_scope_str}, Current scope_str: {current_scope}"
             )
 
         return parsed_data.get("data") or parsed_data
