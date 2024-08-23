@@ -4,8 +4,9 @@
 import pytest
 from itsdangerous import URLSafeTimedSerializer
 
-from flask_namespace import Namespace, Signer
 from flask_namespace.exceptions import OutsideScope
+from flask_namespace.route import RouteNamespace
+from flask_namespace.signer import Signer
 
 secret_key = "Super Secret Key"
 
@@ -47,7 +48,7 @@ def test_scope():
         run_scope_test(Scope1, Scope2)
 
     ####### Check inside Namespace classes #######
-    class SignerNamespace(Namespace):
+    class SignerNamespace(RouteNamespace):
         def load_data(cls, signed_data):
             return signer.loads(signed_data)
 
@@ -64,7 +65,8 @@ def test_scope():
             # Check that scope_str is the same as when it was signed
             if scope_str != cls.__name__:
                 raise OutsideScope(
-                    f"scope_str={scope_str} cls_name={cls.__name__} The scope_str of the signed data isn't derived from the closest Namespace class"
+                    f"scope_str={scope_str} cls_name={cls.__name__} "
+                    "The scope_str of the signed data isn't derived from the closest RouteNamespace class"
                 )
 
     class Namespace1(SignerNamespace):
