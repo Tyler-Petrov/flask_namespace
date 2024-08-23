@@ -76,12 +76,11 @@ class NamespaceMeta(type):
 
             if (
                 self.current_event != "join_room"
+                and self.current_room is not None
                 and not self.authorize_connection_in_current_room()
             ):
                 raise InvalidRoom(
-                    "Blocked incoming event: Connection sending to a room they aren't in",
-                    sid=request.sid,
-                    room_name=self.current_room,
+                    "Blocked incoming event: Connection sending to a room they aren't in"
                 )
 
             return f(self, *args, **kwargs, **data)
@@ -132,11 +131,9 @@ class SocketIONamespace(NamespaceBase, Namespace_, metaclass=NamespaceMeta):
         callback=None,
     ):
         """Emit a custom event to one or more connected connections.  Connection can only emit to a room they are apart of"""
-        if room not in self.rooms(request.sid):
+        if room is not None and room not in self.rooms(request.sid):
             raise InvalidRoom(
                 "Emit was canceled because the connection wasn't in room",
-                sid=request.sid,
-                room=room,
             )
 
         return super().emit(
@@ -221,8 +218,8 @@ class SocketIONamespace(NamespaceBase, Namespace_, metaclass=NamespaceMeta):
 
     @classmethod
     def register_namespace(cls, socketio_instance: SocketIO, url_prefix: str = None):
-        socketio_instance.on_namespace(
-            cls(
-                namespace=url_prefix or cls.url_prefix,
-            )
+        namespace = cls(
+            namespace=url_prefix or cls.url_prefix,
         )
+        socketio_instance.on_namespace(namespace)
+        return namespace
