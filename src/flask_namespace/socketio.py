@@ -5,7 +5,7 @@ from flask import request
 from flask_socketio import Namespace as Namespace_
 from flask_socketio import SocketIO
 
-from flask_namespace.helpers import NamespaceBase
+from .helpers import NamespaceBase
 
 
 class InvalidRoom(Exception):

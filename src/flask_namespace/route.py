@@ -1,16 +1,18 @@
 import inspect
+from functools import wraps
 from typing import Callable, Optional
 
 from flask import Blueprint, Flask, g, render_template, request
+from markupsafe import Markup
 
-from flask_namespace.helpers import ClassMethodsMeta, NamespaceBase, set_jinja_global
-
-app_context: Flask | None = None
+from .helpers import ClassMethodsMeta, NamespaceBase, set_jinja_global
 
 
 class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
     class_definition_suffix = "Routes"
     template_file_ext = "jinja"
+
+    app_context: Flask | None = None
 
     @staticmethod
     def route_prefix_to_http_method(route_method_name):
@@ -44,7 +46,7 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
         return f"{url_param_str}/{route_url_suffix}"
 
     def register_namespace(cls, app: Flask):
-        app_context = app
+        cls.app_context = app
 
         cls.blueprint = Blueprint(
             cls.namespace_name, __name__, url_prefix=cls.url_prefix
@@ -62,7 +64,9 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
             route_method = getattr(cls, attr_name)
 
             # Call modifier class methods
-            prepared_endpoint = cls.prepare_endpoint(route_method)
+            wrapped_endpoint = cls._default_endpoint_response(route_method)
+            prepared_endpoint = cls.prepare_endpoint(wrapped_endpoint)
+
             endpoint_name = cls.format_endpoint_name(route_endpoint)
             endpoint_url = cls.compute_url(route_method)
 
@@ -74,7 +78,16 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
             )(prepared_endpoint)
 
         # Register the blueprint to the flask app
-        app_context.register_blueprint(cls.blueprint)
+        cls.app_context.register_blueprint(cls.blueprint)
+
+    def _default_endpoint_response(cls, endpoint_func):
+        @wraps(endpoint_func)
+        def endpoint_wrapper_func(*args, **kwargs):
+            if (response := endpoint_func(*args, **kwargs)) is not None:
+                return response
+            return cls.render_template()
+
+        return endpoint_wrapper_func
 
     def _default_template_name(cls):
         template_folder, endpoint = request.endpoint.split(".")
@@ -85,10 +98,22 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
         g.template_name = template_name
         g.namespace = cls
 
-        set_jinja_global(app_context, "nsp", cls)
+        set_jinja_global(cls.app_context, "nsp", cls)
         cls.template_name = template_name
 
         return render_template(
             template_name or cls._default_template_name(),
             **context,
         )
+
+    def dependency_link(cls, file_extension):
+        namespace_name, endpoint = request.endpoint.split(".")
+        dependency_path = (
+            f"/static/{file_extension}/{namespace_name}/{endpoint}.{file_extension}"
+        )
+
+        if file_extension == "css":
+            return Markup(f'<link rel="stylesheet" href="{dependency_path}">')
+        if file_extension == "js":
+            return Markup(f'<script src="{dependency_path}"></script>')
+        return dependency_path

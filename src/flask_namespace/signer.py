@@ -2,8 +2,8 @@ import inspect
 
 from itsdangerous import URLSafeTimedSerializer
 
-from flask_namespace.exceptions import OutsideScope
-from flask_namespace.route import RouteNamespace
+from .exceptions import OutsideScope
+from .route import RouteNamespace
 
 
 class Signer(URLSafeTimedSerializer):

@@ -9,7 +9,6 @@ cryptography==42.0.8
 docutils==0.21.2
 Flask==3.0.3
 Flask-SocketIO==5.3.6
-flask_namespace==0.1.6
 h11==0.14.0
 idna==3.7
 importlib_metadata==8.0.0
