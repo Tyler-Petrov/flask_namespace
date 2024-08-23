@@ -67,7 +67,7 @@ class SocketIONamespace {
     }
 
     get eventHandlers() {
-        return Object.keys(jamSessionSocket.socket._callbacks).map(key => key.replace('$', ''));
+        return Object.keys(this.socket._callbacks).map(key => key.replace('$', ''));
     }
 
     prepareData(eventName, data) {
