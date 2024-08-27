@@ -5,14 +5,12 @@ from typing import Callable, Optional
 from flask import Blueprint, Flask, g, render_template, request
 from markupsafe import Markup
 
-from .helpers import ClassMethodsMeta, NamespaceBase, set_jinja_global
+from .helpers import ClassMethodsMeta, NamespaceBase
 
 
 class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
     class_definition_suffix = "Routes"
     template_file_ext = "jinja"
-
-    app_context: Flask | None = None
 
     @staticmethod
     def route_prefix_to_http_method(route_method_name):
@@ -24,6 +22,17 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
 
     def prepare_endpoint(cls, endpoint_func: Callable):
         return endpoint_func
+
+    def before_request(cls):
+        g._route_namespace = cls
+
+    def before_request_wrapper(cls, f):
+        @wraps(f)
+        def wrapper_function(*args, **kwargs):
+            cls.before_request()
+            return f(*args, **kwargs)
+
+        return wrapper_function
 
     def format_endpoint_name(cls, endpoint_name: str) -> str:
         return endpoint_name
@@ -45,8 +54,7 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
 
         return f"{url_param_str}/{route_url_suffix}"
 
-    def register_namespace(cls, app: Flask):
-        cls.app_context = app
+    def register_route_namespace(cls, app: Flask):
 
         cls.blueprint = Blueprint(
             cls.namespace_name, __name__, url_prefix=cls.url_prefix
@@ -65,7 +73,9 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
 
             # Call modifier class methods
             wrapped_endpoint = cls._default_endpoint_response(route_method)
-            prepared_endpoint = cls.prepare_endpoint(wrapped_endpoint)
+            prepared_endpoint = cls.prepare_endpoint(
+                cls.before_request_wrapper(wrapped_endpoint)
+            )
 
             endpoint_name = cls.format_endpoint_name(route_endpoint)
             endpoint_url = cls.compute_url(route_method)
@@ -78,7 +88,7 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
             )(prepared_endpoint)
 
         # Register the blueprint to the flask app
-        cls.app_context.register_blueprint(cls.blueprint)
+        app.register_blueprint(cls.blueprint)
 
     def _default_endpoint_response(cls, endpoint_func):
         @wraps(endpoint_func)
@@ -98,7 +108,6 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
         g.template_name = template_name
         g.namespace = cls
 
-        set_jinja_global(cls.app_context, "nsp", cls)
         cls.template_name = template_name
 
         return render_template(

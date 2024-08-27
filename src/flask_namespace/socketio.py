@@ -217,9 +217,9 @@ class SocketIONamespace(NamespaceBase, Namespace_, metaclass=NamespaceMeta):
         self.emit_global_event(room, kwargs)
 
     @classmethod
-    def register_namespace(cls, socketio_instance: SocketIO, url_prefix: str = None):
+    def register_socketio_namespace(cls, socketio_instance: SocketIO):
         namespace = cls(
-            namespace=url_prefix or cls.url_prefix,
+            namespace=cls.url_prefix,
         )
         socketio_instance.on_namespace(namespace)
         return namespace

@@ -26,10 +26,6 @@ class ClassMethodsMeta(type):
         return super().__new__(cls, name, bases, dct)
 
 
-def set_jinja_global(app: Flask, key: str, value):
-    app.jinja_env.globals[key] = value
-
-
 class classproperty(property):
     def __get__(self, owner_self, owner_cls):
         return self.fget(owner_cls)
