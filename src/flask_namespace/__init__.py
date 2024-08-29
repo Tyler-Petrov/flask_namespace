@@ -23,7 +23,7 @@ class Namespace:
 
         if socketio is None:
             socketio = SocketIO(app)
-        self._socketio_context = socketio
+        self.socketio_context = socketio
 
         app.jinja_env.globals["nsp"] = nsp
 
@@ -31,7 +31,7 @@ class Namespace:
         if isinstance(namespace_class, RouteNamespace):
             namespace_class.register_route_namespace(self.app_context)
         if isinstance(namespace_class, SocketIONamespace):
-            namespace_class.register_socketio_namespace(self.socketio_context)
+            return namespace_class.register_socketio_namespace(self.socketio_context)
 
 
 from .route import RouteNamespace
