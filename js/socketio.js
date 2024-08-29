@@ -1,3 +1,27 @@
+// ################### Helper Funtions ###################
+function snakeToCamelObj(obj) {
+    const camelCaseObject = Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => {
+            // Convert snake_case to camelCase
+            const camelCaseKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            return [camelCaseKey, value];
+        })
+    );
+    return camelCaseObject;
+}
+
+function camelToSnake(obj) {
+    const snakeCaseObject = Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => {
+            // Convert camelCase to snake_case
+            const snakeCaseKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            return [snakeCaseKey, value];
+        })
+    );
+    return snakeCaseObject;
+}
+
+
 // ################### Socket IO Namespace class ###################
 class SocketIONamespace {
     constructor(namespace, room) {
