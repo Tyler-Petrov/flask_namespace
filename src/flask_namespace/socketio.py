@@ -130,18 +130,12 @@ class SocketIONamespace(NamespaceBase, Namespace_, metaclass=NamespaceMeta):
         namespace=None,
         callback=None,
     ):
-        """Emit a custom event to one or more connected connections.  Connection can only emit to a room they are apart of"""
-        if room is not None and room not in self.rooms(request.sid):
-            raise InvalidRoom(
-                "Emit was canceled because the connection wasn't in room",
-            )
-
         return super().emit(
             event,
             data,
             room=room,
             include_self=include_self,
-            namespace=namespace,
+            namespace=namespace or self.namespace,
             callback=callback,
         )
 
