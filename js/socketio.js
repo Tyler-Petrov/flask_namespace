@@ -24,14 +24,16 @@ function camelToSnake(obj) {
 
 // ################### Socket IO Namespace class ###################
 class SocketIONamespace {
-    constructor(namespace, room) {
+    constructor(namespace, room, socketConfig={}) {
         this.joinedRoom = null
         this.room = room
         this.namespace = namespace
-        this.socket = io(namespace, {
-            ackTimeout: 10000,
-            retries: 3,
-        });
+        this.socket = io(namespace, Object.assign(
+            {
+                ackTimeout: 10000,
+                retries: 3,
+            }, socketConfig
+        ));
 
         this.init()
     }
