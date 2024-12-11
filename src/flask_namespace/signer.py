@@ -9,7 +9,6 @@ from .route import RouteNamespace
 class Signer(URLSafeTimedSerializer):
     @classmethod
     def find_closest_route_namespace(cls):
-
         # Traverse the call stack and find BaseBlueprintNamespace
         for frame_info in inspect.stack():
             frame = frame_info.frame
