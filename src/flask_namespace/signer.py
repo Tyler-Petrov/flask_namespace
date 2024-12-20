@@ -65,8 +65,10 @@ class Signer(URLSafeTimedSerializer):
         )
 
         if (
-            previous_scope_str := parsed_data.get("scope_str")
-        ) and previous_scope_str != (current_scope := self.get_scope(scope)):
+            scope is not False
+            and (previous_scope_str := parsed_data.get("scope_str"))
+            and previous_scope_str != (current_scope := self.get_scope(scope))
+        ):
             raise OutsideScope(
                 f"Itsdangerous data attempted to be parsed outside of set scope_str. Previous scope_str: {previous_scope_str}, Current scope_str: {current_scope}"
             )
