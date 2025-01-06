@@ -1,7 +1,7 @@
 import inspect
 import re
 
-from flask import url_for
+from flask import g, has_request_context, url_for
 
 
 def split_on_uppercase_char(string):
@@ -45,6 +45,15 @@ class Endpoint:
 
 
 class ClassMethodsMeta(type):
+    """Meta class for RouteNamespace.
+
+    Some non pythonic modifications have been made to this class, so they're listed here:
+        - All methods are classmethods by default
+        - Methods with an HTTP method prefix (get, post, and form) are converted into Endpoint objects
+        - Any attributes set on this meta class when there is a flask request context are silently
+            added to the flask.g proxy object.  They are thus only available for that request context.
+    """
+
     def __instancecheck__(self, instance):
         try:
             return self in instance.mro()
@@ -86,6 +95,27 @@ class ClassMethodsMeta(type):
         new_class._endpoints = endpoints
 
         return new_class
+
+    def __setattr__(self, name, value):
+        """
+        If called when a flask request context context is available then the attribute is added to the flask.g proxy.
+        Otherwise the super() method is called.
+        """
+        if not has_request_context():
+            return super().__setattr__(name, value)
+        setattr(g, name, value)
+
+    def __getattribute__(self, name):
+        """
+        If called when a flask request context context is available then the attribute is searched for in flask.g first.
+        If the attribute name is not found in flask.g then super() is called.  If no flask request context is available then super() is called.
+        """
+        try:
+            if not has_request_context():
+                raise AttributeError
+            return getattr(g, name)
+        except AttributeError:
+            return super().__getattribute__(name)
 
 
 class classproperty(property):
