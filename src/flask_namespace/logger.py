@@ -16,7 +16,8 @@ class JsonLogWrapper:
     emulate exc_info=True flag of regular logger to conveniently record exception data
     """
 
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger, log_filepath: str):
+        self.log_filepath = log_filepath
         self.logger = logger
 
     def critical(self, message, exc_info=True, **kwargs):
@@ -34,14 +35,9 @@ class JsonLogWrapper:
     def warning(self, message, exc_info=True, **kwargs):
         self.log(logging.WARNING, "warning", message, exc_info, **kwargs)
 
-    def log(
-        self,
-        log_value,
-        log_level,
-        message,
-        exc_info=True,
-        **kwargs,
-    ):
+    def build_payload(
+        self, log_value, log_level, message, exc_info=True, **kwargs
+    ) -> dict:
         now = datetime.datetime.now(ZoneInfo("UTC"))
         time = now.replace(microsecond=((now.microsecond // 1000) * 1000))
 
@@ -54,14 +50,6 @@ class JsonLogWrapper:
             "formatted_timestamp": time.strftime("%A, %B %e, %Y at %I:%M %p"),
             "log_unique_id": unique_id,
         }
-
-        # include user_id if available
-        try:
-            payload["user_id"] = g.global_user.id()
-            payload["username"] = g.global_user.full_name
-
-        except:
-            pass
 
         # also add request information
         try:
@@ -83,8 +71,23 @@ class JsonLogWrapper:
 
         # Apply kwargs last to override defaults if desired
         payload.update(**kwargs)
+
+        return payload
+
+    def log(
+        self,
+        log_value,
+        log_level,
+        message,
+        exc_info=True,
+        **kwargs,
+    ):
         self.logger.log(
-            log_value, json.dumps(payload, default=self.json_default_serializer)
+            log_value,
+            json.dumps(
+                self.build_payload(log_value, log_level, message, exc_info, **kwargs),
+                default=self.json_default_serializer,
+            ),
         )
 
     @staticmethod
@@ -94,7 +97,6 @@ class JsonLogWrapper:
         return json_util.default(o)
 
     def all_logs(self, rotation_number=0) -> list:
-        from . import app
 
         def safe_log_line(log_line):
             try:
@@ -104,7 +106,7 @@ class JsonLogWrapper:
 
         filename_suffix = f".{rotation_number}" if rotation_number != 0 else ""
 
-        with open(f"{app.config.get('LOGFILE')}{filename_suffix}") as lf:
+        with open(f"{self.log_filepath}{filename_suffix}") as lf:
             return list(
                 reversed(
                     [safe_log_line(log) for log in lf.readlines() if safe_log_line(log)]
