@@ -29,7 +29,10 @@ class Endpoint:
             f"/<{param}>"
             for param in list(inspect.signature(self.func).parameters.values())
         )
-        url_suffix = self.endpoint_name.replace("_", "-")
+        if self.endpoint_name == "index":
+            url_suffix = ""
+        else:
+            url_suffix = self.endpoint_name.replace("_", "-")
         self.url = f"{url_prefix}/{url_suffix}"
 
     def __call__(self, *args, **kwargs):
