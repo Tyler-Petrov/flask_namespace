@@ -73,7 +73,7 @@ class ClassMethodsMeta(type):
         new_class = super().__new__(cls, name, bases, dct)
 
         # Iterate over the class dictionary to find methods
-        endpoints = []
+        endpoints = {}
         for attr in dir(new_class):
             value = getattr(new_class, attr)
             attr_prefix, *_ = attr.split("_", 1)
@@ -91,7 +91,7 @@ class ClassMethodsMeta(type):
                 endpoint = Endpoint(new_class, value)
 
             # Add endpoint to list
-            endpoints.append(endpoint)
+            endpoints[endpoint.endpoint_name] = endpoint
             # Replace method with classmethod
             setattr(new_class, attr, endpoint)
 

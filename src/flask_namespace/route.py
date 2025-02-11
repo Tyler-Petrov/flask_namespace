@@ -1,4 +1,3 @@
-import inspect
 from functools import wraps
 from typing import Callable, Optional
 
@@ -9,7 +8,7 @@ from .helpers import ClassMethodsMeta, Endpoint, NamespaceBase
 
 
 class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
-    _endpoints: list[Endpoint]
+    _endpoints: dict[str, Endpoint]
     class_definition_suffix = "Routes"
     template_file_ext = "jinja"
 
@@ -35,7 +34,7 @@ class RouteNamespace(NamespaceBase, metaclass=ClassMethodsMeta):
             cls.namespace_name, __name__, url_prefix=cls.url_prefix
         )
 
-        for endpoint in cls._endpoints:
+        for endpoint in cls._endpoints.values():
             # Call modifier class methods
             wrapped_endpoint = cls._default_endpoint_response(endpoint)
             prepared_endpoint = cls.prepare_endpoint(

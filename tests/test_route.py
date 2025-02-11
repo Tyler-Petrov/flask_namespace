@@ -1,5 +1,6 @@
 from flask import Blueprint, Flask
 
+from flask_namespace import Namespace
 from flask_namespace.route import RouteNamespace
 
 
@@ -13,6 +14,7 @@ def get_blueprint_endpoints(app: Flask, blueprint: Blueprint):
 
 def test_route():
     app = Flask(__name__)
+    namespace = Namespace(app)
 
     class TestRoutes(RouteNamespace):
         def get_get(cls):
@@ -21,7 +23,7 @@ def test_route():
         def post_post(cls):
             return cls.render_template("test.jinja")
 
-    TestRoutes.register_namespace(app)
+    namespace.register_namespace(TestRoutes)
 
     for bp_name, bp in app.blueprints.items():
         assert bp_name == "test", "Blueprint Name isn't correct"

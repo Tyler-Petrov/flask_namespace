@@ -1,4 +1,4 @@
-from flask import Flask, g, render_template_string
+from flask import Flask, render_template_string
 
 from flask_namespace import Namespace, nsp
 from flask_namespace.route import RouteNamespace
