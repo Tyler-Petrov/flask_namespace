@@ -7,7 +7,7 @@ import uuid
 from zoneinfo import ZoneInfo
 
 from bson import json_util
-from flask import g, request
+from flask import request
 
 
 class JsonLogWrapper:
@@ -68,6 +68,14 @@ class JsonLogWrapper:
                 payload["exc_traceback"] = traceback.format_exception(
                     exc_type, exc_value, exc_traceback
                 )
+                exc_context = getattr(exc_value, "context", None)
+                if exc_context:
+                    payload["exc_context"] = json.loads(
+                        json.dumps(
+                            exc_context,
+                            default=str,
+                        )
+                    )
 
         # Apply kwargs last to override defaults if desired
         payload.update(**kwargs)
